@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Заявка на повышение</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: "Segoe UI", Roboto, Arial, sans-serif;
+    background: linear-gradient(135deg, #1a1b2e, #26284a);
+    color: #eaeaf5;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .card {
+    background: #1f2140;
+    border: 1px solid #34376a;
+    border-radius: 18px;
+    padding: 28px;
+    width: 100%;
+    max-width: 640px;
+    box-shadow: 0 10px 40px rgba(0,0,0,.4);
+  }
+  h1 { font-size: 24px; margin-bottom: 6px; }
+  h2 { font-size: 20px; margin-bottom: 14px; }
+  .sub { color: #9a9cc4; margin-bottom: 20px; font-size: 14px; }
+  label { font-size: 14px; color: #b8bae0; display: block; margin-bottom: 6px; }
+  input[type=text] {
+    width: 100%;
+    padding: 12px 14px;
+    border-radius: 10px;
+    border: 1px solid #3b3e78;
+    background: #151732;
+    color: #fff;
+    font-size: 15px;
+    margin-bottom: 18px;
+    outline: none;
+  }
+  input[type=text]:focus { border-color: #6c72ff; }
+  .roles { display: grid; gap: 10px; }
+  .role-btn {
+    text-align: left;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1px solid #3b3e78;
+    background: #272a55;
+    color: #eaeaf5;
+    cursor: pointer;
+    font-size: 15px;
+    transition: .15s;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .role-btn:hover { background: #33377a; transform: translateY(-1px); border-color: #6c72ff; }
+  .role-btn small { color: #9a9cc4; }
+  .note { margin-top: 16px; font-size: 13px; color: #8486b0; line-height: 1.5; }
+
+  .progress { height: 8px; background: #151732; border-radius: 10px; overflow: hidden; margin-bottom: 8px; }
+  .progress div { height: 100%; width: 0; background: linear-gradient(90deg, #6c72ff, #46d39a); transition: width .3s; }
+  .counter { font-size: 13px; color: #9a9cc4; margin-bottom: 20px; display: flex; justify-content: space-between; }
+  .question {
+    font-size: 22px;
+    font-weight: 600;
+    line-height: 1.35;
+    margin-bottom: 26px;
+    min-height: 90px;
+  }
+  .question b { color: #8f94ff; }
+  .answers { display: flex; gap: 12px; }
+  .btn {
+    flex: 1;
+    padding: 14px;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    color: #fff;
+    transition: .15s;
+  }
+  .btn:hover { transform: translateY(-2px); filter: brightness(1.1); }
+  .yes { background: #2fb67c; }
+  .no { background: #e5484d; }
+  .ghost {
+    background: transparent;
+    border: 1px solid #3b3e78;
+    color: #b8bae0;
+    padding: 10px 16px;
+    font-size: 14px;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: .15s;
+  }
+  .ghost:hover { background: #272a55; }
+  .row { display: flex; gap: 10px; margin-top: 18px; flex-wrap: wrap; }
+
+  .fail-icon, .ok-icon { font-size: 54px; margin-bottom: 10px; }
+  .fail-box {
+    background: #3a1d2b;
+    border: 1px solid #7a2c3d;
+    padding: 14px 16px;
+    border-radius: 12px;
+    margin: 14px 0;
+    line-height: 1.5;
+  }
+  textarea {
+    width: 100%;
+    height: 330px;
+    padding: 14px;
+    border-radius: 12px;
+    border: 1px solid #3b3e78;
+    background: #151732;
+    color: #eaeaf5;
+    font-size: 14px;
+    font-family: Consolas, monospace;
+    resize: vertical;
+    outline: none;
+    line-height: 1.5;
+  }
+  .hint {
+    background: #1d3a30;
+    border: 1px solid #2c7a5c;
+    padding: 12px 14px;
+    border-radius: 12px;
+    margin: 14px 0;
+    font-size: 14px;
+    line-height: 1.5;
+  }
+  .copy { background: #6c72ff; width: 100%; margin-top: 12px; }
+  .hidden { display: none; }
+</style>
+</head>
+<body>
+
+<div class="card">
+
+  <!-- ЭКРАН 1: ВЫБОР РОЛИ -->
+  <div id="screenSelect">
+    <h1>📈 Заявка на повышение</h1>
+    <p class="sub">Выберите, на какую роль вы идёте в повышение</p>
+
+    <label for="nick">Ваш ник (необязательно)</label>
+    <input type="text" id="nick" placeholder="Например: @username" maxlength="40">
+
+    <div class="roles" id="rolesList"></div>
+
+    <p class="note">
+      ℹ️ Повышение <b>ЗГА → Г.А</b> происходит только по решению действующего Г.А (передача прав), заявка не подаётся.
+    </p>
+  </div>
+
+  <!-- ЭКРАН 2: ВОПРОСЫ -->
+  <div id="screenQuiz" class="hidden">
+    <div class="counter">
+      <span id="routeLabel"></span>
+      <span id="stepLabel"></span>
+    </div>
+    <div class="progress"><div id="bar"></div></div>
+    <div class="question" id="questionText"></div>
+    <div class="answers">
+      <button class="btn yes" id="btnYes">✅ Да</button>
+      <button class="btn no" id="btnNo">❌ Нет</button>
+    </div>
+    <div class="row">
+      <button class="ghost" id="btnBack">← Назад</button>
+      <button class="ghost" id="btnCancel">Выбрать другую роль</button>
+    </div>
+  </div>
+
+  <!-- ЭКРАН 3: ОТКАЗ -->
+  <div id="screenFail" class="hidden">
+    <div class="fail-icon">⛔</div>
+    <h2>Повышение пока недоступно</h2>
+    <div class="fail-box" id="failText"></div>
+    <p class="sub">Выполните этот пункт и возвращайтесь, когда все требования будут закрыты.</p>
+    <div class="row">
+      <button class="ghost" id="btnRetry">🔄 Пройти заново</button>
+      <button class="ghost" id="btnOther">Выбрать другую роль</button>
+    </div>
+  </div>
+
+  <!-- ЭКРАН 4: УСПЕХ -->
+  <div id="screenDone" class="hidden">
+    <div class="ok-icon">🎉</div>
+    <h2>Все требования выполнены!</h2>
+    <p class="sub">Скопируйте текст ниже — это ваша заявка.</p>
+    <textarea id="resultText" readonly></textarea>
+    <button class="btn copy" id="btnCopy">📋 Скопировать текст</button>
+    <div class="hint">
+      📨 <b>Отправьте данный текст Основателю, Владельцу или же Заместителю Основателя.</b>
+    </div>
+    <div class="row">
+      <button class="ghost" id="btnAgain">🔄 Подать другую заявку</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  // ====== ДАННЫЕ ======
+  const ROUTES = [
+    {
+      from: "Модератор", fromPts: 40, to: "Ст. модератор", toPts: 60,
+      questions: [
+        { q: "Вы пробыли в роли <b>10+ дней</b>?", line: "Срок в роли: 10+ дней" },
+        { q: "Вы набрали <b>200+ сообщений</b>?", line: "Сообщений: 200+" },
+        { q: "Вы были активны <b>7 из 10 дней</b>?", line: "Активных дней: 7 из 10" },
+        { q: "Вы выдали <b>10+ наказаний</b>?", line: "Выдано наказаний: 10+" },
+        { q: "Вы решили <b>3+ жалобы</b>?", line: "Решено жалоб: 3+" },
+        { q: "У вас <b>не более 1</b> ошибочного наказания?", line: "Ошибочных наказаний: не более 1" },
+        { q: "У вас <b>нет выговоров</b>?", line: "Выговоров: 0" }
+      ]
+    },
+    {
+      from: "Ст. модератор", fromPts: 60, to: "Мл. администратор", toPts: 70,
+      questions: [
+        { q: "Вы пробыли в роли <b>14+ дней</b>?", line: "Срок в роли: 14+ дней" },
+        { q: "Вы набрали <b>400+ сообщений</b>?", line: "Сообщений: 400+" },
+        { q: "Вы были активны <b>10 из 14 дней</b>?", line: "Активных дней: 10 из 14" },
+        { q: "Вы выдали <b>20+ наказаний</b>?", line: "Выдано наказаний: 20+" },
+        { q: "Вы решили <b>8+ жалоб</b>?", line: "Решено жалоб: 8+" },
+        { q: "Вы помогли/обучили <b>1+ мл. модератора</b>?", line: "Помог/обучил мл. модератора: 1+" },
+        { q: "У вас <b>не более 2</b> ошибочных наказаний?", line: "Ошибочных наказаний: не более 2" },
+        { q: "У вас <b>нет выговоров</b>?", line: "Выговоров: 0" },
+        { q: "Вы сдали экзамен по правилам на <b>80%+</b>?", line: "Экзамен по правилам: 80%+" }
+      ]
+    },
+    {
+      from: "Мл. администратор", fromPts: 70, to: "Администратор", toPts: 80,
+      questions: [
+        { q: "Вы пробыли в роли <b>21+ день</b>?", line: "Срок в роли: 21+ день" },
+        { q: "Вы набрали <b>700+ сообщений</b>?", line: "Сообщений: 700+" },
+        { q: "Вы были активны <b>15 из 21 дня</b>?", line: "Активных дней: 15 из 21" },
+        { q: "Вы выдали <b>30+ наказаний</b>?", line: "Выдано наказаний: 30+" },
+        { q: "Вы решили <b>12+ жалоб</b>?", line: "Решено жалоб: 12+" },
+        { q: "Вы провели <b>2+ ивента</b>?", line: "Проведено ивентов: 2+" },
+        { q: "Вы обучили <b>2+ сотрудников</b>?", line: "Обучено сотрудников: 2+" },
+        { q: "У вас <b>не более 2</b> ошибочных наказаний?", line: "Ошибочных наказаний: не более 2" },
+        { q: "У вас <b>не более 1 выговора</b> (и он снят)?", line: "Выговоров: не более 1 (снятый)" }
+      ]
+    },
+    {
+      from: "Администратор", fromPts: 80, to: "Ст. админ", toPts: 84,
+      questions: [
+        { q: "Вы пробыли в роли <b>21+ день</b>?", line: "Срок в роли: 21+ день" },
+        { q: "Вы набрали <b>1000+ сообщений</b>?", line: "Сообщений: 1000+" },
+        { q: "Вы были активны <b>15 из 21 дня</b>?", line: "Активных дней: 15 из 21" },
+        { q: "Вы выдали <b>40+ наказаний</b>?", line: "Выдано наказаний: 40+" },
+        { q: "Вы решили <b>18+ жалоб</b>?", line: "Решено жалоб: 18+" },
+        { q: "Вы провели <b>3+ ивента</b>?", line: "Проведено ивентов: 3+" },
+        { q: "Вы участвовали в <b>2+ собеседованиях/разборах</b> стаффа?", line: "Участие в собеседованиях/разборах стаффа: 2+" },
+        { q: "У вас <b>не более 3</b> ошибочных наказаний?", line: "Ошибочных наказаний: не более 3" },
+        { q: "У вас <b>нет выговоров</b>?", line: "Выговоров: 0" }
+      ]
+    },
+    {
+      from: "Ст. админ", fromPts: 84, to: "Куратор", toPts: 87,
+      questions: [
+        { q: "Вы пробыли в роли <b>30+ дней</b>?", line: "Срок в роли: 30+ дней" },
+        { q: "Вы набрали <b>1500+ сообщений</b>?", line: "Сообщений: 1500+" },
+        { q: "Вы были активны <b>22 из 30 дней</b>?", line: "Активных дней: 22 из 30" },
+        { q: "Вы выдали <b>50+ наказаний</b>?", line: "Выдано наказаний: 50+" },
+        { q: "Вы решили <b>25+ жалоб</b>?", line: "Решено жалоб: 25+" },
+        { q: "Вы провели <b>4+ ивента</b>?", line: "Проведено ивентов: 4+" },
+        { q: "Вы приняли/обучили <b>3+ сотрудников</b>?", line: "Принято/обучено сотрудников: 3+" },
+        { q: "Вы сдали <b>отчёт по своему направлению</b>?", line: "Отчёт по своему направлению: сдан (1)" },
+        { q: "У вас <b>нет выговоров</b>?", line: "Выговоров: 0" }
+      ]
+    },
+    {
+      from: "Куратор", fromPts: 87, to: "ЗГА", toPts: 89,
+      questions: [
+        { q: "Вы пробыли в роли <b>45+ дней</b>?", line: "Срок в роли: 45+ дней" },
+        { q: "Вы набрали <b>2000+ сообщений</b>?", line: "Сообщений: 2000+" },
+        { q: "Вы были активны <b>33 из 45 дней</b>?", line: "Активных дней: 33 из 45" },
+        { q: "Вы решили <b>35+ жалоб/конфликтов</b>?", line: "Решено жалоб/конфликтов: 35+" },
+        { q: "Вы провели <b>5+ ивентов/улучшений</b> для группы?", line: "Ивентов / улучшений для группы: 5+" },
+        { q: "У вас <b>нет выговоров</b>?", line: "Выговоров: 0" }
+      ],
+      extra: "Окончательное решение по этой роли принимает только Г.А."
+    }
+  ];
+
+  // ====== ЭЛЕМЕНТЫ ======
+  const $ = id => document.getElementById(id);
+  const screens = ["screenSelect", "screenQuiz", "screenFail", "screenDone"];
+  let route = null;
+  let step = 0;
+
+  function show(id) {
+    screens.forEach(s => $(s).classList.toggle("hidden", s !== id));
+  }
+
+  // ====== СПИСОК РОЛЕЙ ======
+  const list = $("rolesList");
+  ROUTES.forEach((r, i) => {
+    const b = document.createElement("button");
+    b.className = "role-btn";
+    b.innerHTML = `<span>${r.from} → <b>${r.to}</b></span><small>${r.fromPts} → ${r.toPts}</small>`;
+    b.onclick = () => startQuiz(i);
+    list.appendChild(b);
+  });
+
+  // ====== ЛОГИКА ======
+  function startQuiz(i) {
+    route = ROUTES[i];
+    step = 0;
+    $("routeLabel").textContent = `${route.from} → ${route.to}`;
+    renderQuestion();
+    show("screenQuiz");
+  }
+
+  function renderQuestion() {
+    const total = route.questions.length;
+    $("questionText").innerHTML = route.questions[step].q;
+    $("stepLabel").textContent = `Вопрос ${step + 1} из ${total}`;
+    $("bar").style.width = (step / total * 100) + "%";
+    $("btnBack").style.visibility = step === 0 ? "hidden" : "visible";
+  }
+
+  $("btnYes").onclick = () => {
+    step++;
+    if (step >= route.questions.length) {
+      $("bar").style.width = "100%";
+      finish();
+    } else {
+      renderQuestion();
+    }
+  };
+
+  $("btnNo").onclick = () => {
+    const item = route.questions[step];
+    $("failText").innerHTML =
+      `Вы ответили «Нет» на пункт:<br><b>${item.line}</b><br><br>` +
+      `Из-за этого повышение <b>${route.from} → ${route.to}</b> вам недоступно.`;
+    show("screenFail");
+  };
+
+  $("btnBack").onclick = () => {
+    if (step > 0) { step--; renderQuestion(); }
+  };
+
+  $("btnCancel").onclick = () => show("screenSelect");
+  $("btnOther").onclick = () => show("screenSelect");
+  $("btnAgain").onclick = () => show("screenSelect");
+  $("btnRetry").onclick = () => {
+    step = 0;
+    renderQuestion();
+    show("screenQuiz");
+  };
+
+  function finish() {
+    const nick = $("nick").value.trim() || "не указан";
+    const date = new Date().toLocaleDateString("ru-RU");
+
+    let text = "";
+    text += "📋 ЗАЯВКА НА ПОВЫШЕНИЕ\n";
+    text += "━━━━━━━━━━━━━━━━━━━━\n";
+    text += `👤 Ник: ${nick}\n`;
+    text += `📅 Дата: ${date}\n`;
+    text += `🔹 Текущая роль: ${route.from} (${route.fromPts})\n`;
+    text += `🔸 Желаемая роль: ${route.to} (${route.toPts})\n\n`;
+    text += "📊 Выполнение требований:\n";
+    route.questions.forEach(q => {
+      text += `✅ ${q.line} — Да\n`;
+    });
+    text += "\n";
+    text += "━━━━━━━━━━━━━━━━━━━━\n";
+    text += `Все требования для повышения ${route.from} → ${route.to} выполнены. `;
+    text += "Прошу рассмотреть мою заявку.";
+    if (route.extra) text += `\n\n⚠️ ${route.extra}`;
+
+    $("resultText").value = text;
+    $("btnCopy").textContent = "📋 Скопировать текст";
+    show("screenDone");
+  }
+
+  $("btnCopy").onclick = async () => {
+    const ta = $("resultText");
+    try {
+      await navigator.clipboard.writeText(ta.value);
+    } catch (e) {
+      ta.select();
+      document.execCommand("copy");
+    }
+    $("btnCopy").textContent = "✅ Скопировано!";
+    setTimeout(() => $("btnCopy").textContent = "📋 Скопировать текст", 2000);
+  };
+</script>
+</body>
+</html>
